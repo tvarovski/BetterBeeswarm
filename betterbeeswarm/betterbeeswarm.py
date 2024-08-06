@@ -113,7 +113,7 @@ class Beeswarm(OriginalBeeswarm):
             msg = (
                 "{:.1%} of the points cannot be placed; you may want "
                 "to decrease the size of the markers or use stripplot."
-                f"Using BetterBeeswarm to recursively shrink points by {(1 - self.radius_shrink_factor) * 100:.1f}%"
+                f"Using BetterBeeswarm to recursively shrink points by {(1 - self.shrink_factor) * 100:.1f}%"
             ).format(gutter_prop)
             warnings.warn(msg, UserWarning)
         
