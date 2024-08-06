@@ -15,8 +15,8 @@ class Beeswarm(OriginalBeeswarm):
         self.orient = orient
         self.width = width
         self.warn_thresh = warn_thresh
-        #JT modified
-        self.gutters = False
+        self.gutters = False #BetterBeeswarm modification
+        self.shrink_factor = 0.9 #BetterBeeswarm modification
 
     def __call__(self, points, center):
         """Swarm `points`, a PathCollection, around the `center` position."""
@@ -49,14 +49,15 @@ class Beeswarm(OriginalBeeswarm):
         edge = points.get_linewidth().item()
         radii = (np.sqrt(sizes) + edge) / 2 * (dpi / 72)
 
-        #JT modified added while loop to check for gutters
+        #BetterBeeswarm modified added while loop to check for gutters
         checking_gutters = True
-        radius_shrink_factor = 0.9
+        radius_shrink_factor = self.shrink_factor
+        original_radius_fraction = 1.0
         orig_xy_copy = orig_xy.copy()
 
         while checking_gutters:
 
-            orig_xy = np.c_[orig_xy_copy, radii] #JT modified by changing orig_xy to orig_xy_copy
+            orig_xy = np.c_[orig_xy_copy, radii] #BetterBeeswarm modified by changing orig_xy to orig_xy_copy
 
             # Sort along the value axis to facilitate the beeswarm
             sorter = np.argsort(orig_xy[:, 1])
@@ -90,7 +91,8 @@ class Beeswarm(OriginalBeeswarm):
             if self.gutters:
                 # Shrink the radii and try again
                 radii = radii * radius_shrink_factor
-                print(f"Shrinking radii by {radius_shrink_factor}")
+                original_radius_fraction = original_radius_fraction * radius_shrink_factor
+                print(f"Shrinking radii to the {original_radius_fraction * 100}% of the original point size.")
             else:
                 checking_gutters = False
 
@@ -111,12 +113,14 @@ class Beeswarm(OriginalBeeswarm):
             msg = (
                 "{:.1%} of the points cannot be placed; you may want "
                 "to decrease the size of the markers or use stripplot."
+                f"Using BetterBeeswarm to recursively shrink points by {(1 - self.radius_shrink_factor) * 100:.1f}%"
             ).format(gutter_prop)
             warnings.warn(msg, UserWarning)
-        #JT modified
+        
+        #BetterBeeswarm modified
             self.gutters = True
         else:
             self.gutters = False
-        #end JT modification
+        #end BetterBeeswarm modification
 
         return points

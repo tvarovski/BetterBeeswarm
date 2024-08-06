@@ -30,7 +30,6 @@ tips = sns.load_dataset("tips")
 
 plt.figure(figsize=(4, 4)) # set figure size
 sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis')
-plt.savefig('native_beeswarm.png', dpi=300)
 ```
 ![native_beeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/native_beeswarm.png)
 
@@ -46,7 +45,6 @@ tips = sns.load_dataset("tips")
 
 plt.figure(figsize=(4, 4)) # set figure size
 sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis')
-plt.savefig('betterbeeswarm.png', dpi=300)
 ```
 ![betterbeeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm.png)
 
@@ -64,6 +62,5 @@ sns.catplot(
     x="time", y="total_bill", hue="sex", col="day",
     aspect=0.6, height=2.5, alpha=0.7, size=5
 )
-plt.savefig('betterbeeswarm_cat.png', dpi=300)
 ```
 ![betterbeeswarmCat](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_cat.png)
