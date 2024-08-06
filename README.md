@@ -32,7 +32,7 @@ plt.figure(figsize=(4, 4)) # set figure size
 sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis')
 plt.savefig('native_beeswarm.png', dpi=300)
 ```
-![native_beeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/examples/native_beeswarm.png)
+![native_beeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/native_beeswarm.png)
 
 ### Example 1
 Default behaviour of native `Seaborn` can be modifies with `BetterBeeswarm` as follows:
@@ -48,7 +48,7 @@ plt.figure(figsize=(4, 4)) # set figure size
 sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis')
 plt.savefig('betterbeeswarm.png', dpi=300)
 ```
-![betterbeeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/examples/betterbeeswarm.png)
+![betterbeeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm.png)
 
 ### Example 2
 `BetterBeeswarm` also works for categorical plots and any time Seaborn's `Beeswarm` class is used:
@@ -66,4 +66,4 @@ sns.catplot(
 )
 plt.savefig('betterbeeswarm_cat.png', dpi=300)
 ```
-![betterbeeswarmCat](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/examples/betterbeeswarm_cat.png)
+![betterbeeswarmCat](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_cat.png)
