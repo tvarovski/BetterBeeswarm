@@ -1,4 +1,7 @@
 from seaborn.categorical import Beeswarm as OriginalBeeswarm
+from seaborn.categorical import _get_transform_functions
+import warnings
+import numpy as np
 
 class Beeswarm(OriginalBeeswarm):
     """Modifies a scatterplot artist to show a beeswarm plot.
