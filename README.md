@@ -31,7 +31,7 @@ tips = sns.load_dataset("tips")
 plt.figure(figsize=(4, 4)) # set figure size
 sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis')
 ```
-![native_beeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/native_beeswarm.png)
+![native_beeswarm](https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/native_beeswarm.png =100x100)
 
 ### Example 1
 Default behaviour of native `Seaborn` can be modifies with `BetterBeeswarm` as follows:
