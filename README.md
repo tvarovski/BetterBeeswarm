@@ -1,6 +1,6 @@
 # BetterBeeswarm
 
-This repository contains a modified `Beeswarm` class from `seaborn`, which will automatically decrease the spacing of scatter datapoints untill no points fall into the `Beeswarm` "gutters".
+This repository contains a modified `Beeswarm` class (swarmplot or swarm) from `seaborn`, which will automatically decrease the spacing of scatter datapoints untill no points fall into the `Beeswarm` "gutters".
 
 ## Installation
 
