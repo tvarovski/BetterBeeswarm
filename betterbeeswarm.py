@@ -1,4 +1,6 @@
-class Beeswarm:
+from seaborn.categorical import Beeswarm as OriginalBeeswarm
+
+class Beeswarm(OriginalBeeswarm):
     """Modifies a scatterplot artist to show a beeswarm plot.
     This is a modification of the seaborn beeswarm plot that instead of
     stopping when points overlap and moving them to the gutter, it shrinks
@@ -88,102 +90,6 @@ class Beeswarm:
                 print(f"Shrinking radii by {radius_shrink_factor}")
             else:
                 checking_gutters = False
-
-    def beeswarm(self, orig_xyr):
-        """Adjust x position of points to avoid overlaps."""
-        # In this method, `x` is always the categorical axis
-        # Center of the swarm, in point coordinates
-        midline = orig_xyr[0, 0]
-
-        # Start the swarm with the first point
-        swarm = np.atleast_2d(orig_xyr[0])
-
-        # Loop over the remaining points
-        for xyr_i in orig_xyr[1:]:
-
-            # Find the points in the swarm that could possibly
-            # overlap with the point we are currently placing
-            neighbors = self.could_overlap(xyr_i, swarm)
-
-            # Find positions that would be valid individually
-            # with respect to each of the swarm neighbors
-            candidates = self.position_candidates(xyr_i, neighbors)
-
-            # Sort candidates by their centrality
-            offsets = np.abs(candidates[:, 0] - midline)
-            candidates = candidates[np.argsort(offsets)]
-
-            # Find the first candidate that does not overlap any neighbors
-            new_xyr_i = self.first_non_overlapping_candidate(candidates, neighbors)
-
-            # Place it into the swarm
-            swarm = np.vstack([swarm, new_xyr_i])
-
-        return swarm
-
-    def could_overlap(self, xyr_i, swarm):
-        """Return a list of all swarm points that could overlap with target."""
-        # Because we work backwards through the swarm and can short-circuit,
-        # the for-loop is faster than vectorization
-        _, y_i, r_i = xyr_i
-        neighbors = []
-        for xyr_j in reversed(swarm):
-            _, y_j, r_j = xyr_j
-            if (y_i - y_j) < (r_i + r_j):
-                neighbors.append(xyr_j)
-            else:
-                break
-        return np.array(neighbors)[::-1]
-
-    def position_candidates(self, xyr_i, neighbors):
-        """Return a list of coordinates that might be valid by adjusting x."""
-        candidates = [xyr_i]
-        x_i, y_i, r_i = xyr_i
-        left_first = True
-        for x_j, y_j, r_j in neighbors:
-            dy = y_i - y_j
-            dx = np.sqrt(max((r_i + r_j) ** 2 - dy ** 2, 0)) * 1.05
-            cl, cr = (x_j - dx, y_i, r_i), (x_j + dx, y_i, r_i)
-            if left_first:
-                new_candidates = [cl, cr]
-            else:
-                new_candidates = [cr, cl]
-            candidates.extend(new_candidates)
-            left_first = not left_first
-        return np.array(candidates)
-
-    def first_non_overlapping_candidate(self, candidates, neighbors):
-        """Find the first candidate that does not overlap with the swarm."""
-
-        # If we have no neighbors, all candidates are good.
-        if len(neighbors) == 0:
-            return candidates[0]
-
-        neighbors_x = neighbors[:, 0]
-        neighbors_y = neighbors[:, 1]
-        neighbors_r = neighbors[:, 2]
-
-        for xyr_i in candidates:
-
-            x_i, y_i, r_i = xyr_i
-
-            dx = neighbors_x - x_i
-            dy = neighbors_y - y_i
-            sq_distances = np.square(dx) + np.square(dy)
-
-            sep_needed = np.square(neighbors_r + r_i)
-
-            # Good candidate does not overlap any of neighbors which means that
-            # squared distance between candidate and any of the neighbors has
-            # to be at least square of the summed radii
-            good_candidate = np.all(sq_distances >= sep_needed)
-
-            if good_candidate:
-                return xyr_i
-
-        raise RuntimeError(
-            "No non-overlapping candidates found. This should not happen."
-        )
 
     def add_gutters(self, points, center, trans_fwd, trans_inv):
         """Stop points from extending beyond their territory."""
