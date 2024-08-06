@@ -51,6 +51,7 @@ sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palett
 <p align="center">
     <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm.png" width="500" height="500">
 </p>
+
 ### Example 2
 `BetterBeeswarm` also works for categorical plots and any time Seaborn's `Beeswarm` class is used:
 
