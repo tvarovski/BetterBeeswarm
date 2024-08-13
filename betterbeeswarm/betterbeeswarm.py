@@ -1,11 +1,15 @@
 from seaborn.categorical import Beeswarm as OriginalBeeswarm
 from seaborn.categorical import _CategoricalPlotter as OriginalCategoricalPlotter
 from seaborn.categorical import _get_transform_functions
+from seaborn.categorical import _categorical_docs
 from seaborn.utils import _draw_figure
 from seaborn.utils import _scatter_legend_artist
+from seaborn.utils import _default_color
 from matplotlib.markers import MarkerStyle
 import warnings
 import numpy as np
+import matplotlib.pyplot as plt
+from textwrap import dedent
 
 class Beeswarm(OriginalBeeswarm):
     """Modifies a scatterplot artist to show a beeswarm plot.
@@ -174,7 +178,7 @@ class Beeswarm(OriginalBeeswarm):
             ).format(gutter_prop)
             warnings.warn(msg, UserWarning)
 
-class __CategoricalPlotter(OriginalCategoricalPlotter):
+class _CategoricalPlotter(OriginalCategoricalPlotter):
     def plot_swarms(
         self,
         dodge,
@@ -196,10 +200,11 @@ class __CategoricalPlotter(OriginalCategoricalPlotter):
 
         if "marker" in plot_kws and not MarkerStyle(plot_kws["marker"]).is_filled():
             plot_kws.pop("edgecolor", None)
-        
+
         if "overflow" in plot_kws:
             overflow = plot_kws.pop("overflow")
-        plot_kws.pop("overflow", None)
+        else:
+            overflow = "gutters"
 
         for sub_vars, sub_data in self.iter_data(iter_vars,
                                                  from_comp_data=True,
@@ -253,6 +258,140 @@ class __CategoricalPlotter(OriginalCategoricalPlotter):
         _draw_figure(ax.figure)
         self._configure_legend(ax, _scatter_legend_artist, plot_kws)
 
+
+def swarmplot(
+    data=None, *, x=None, y=None, hue=None, order=None, hue_order=None,
+    dodge=False, orient=None, color=None, palette=None,
+    size=5, edgecolor=None, linewidth=0, hue_norm=None, log_scale=None,
+    native_scale=False, formatter=None, legend="auto", warn_thresh=.05,
+    ax=None, **kwargs
+):
+
+    p = _CategoricalPlotter(
+        data=data,
+        variables=dict(x=x, y=y, hue=hue),
+        order=order,
+        orient=orient,
+        color=color,
+        legend=legend,
+    )
+
+    if ax is None:
+        ax = plt.gca()
+
+    if p.plot_data.empty:
+        return ax
+
+    if p.var_types.get(p.orient) == "categorical" or not native_scale:
+        p.scale_categorical(p.orient, order=order, formatter=formatter)
+
+    p._attach(ax, log_scale=log_scale)
+
+    if not p.has_xy_data:
+        return ax
+
+    # Deprecations to remove in v0.14.0.
+    hue_order = p._palette_without_hue_backcompat(palette, hue_order)
+    palette, hue_order = p._hue_backcompat(color, palette, hue_order)
+
+    p.map_hue(palette=palette, order=hue_order, norm=hue_norm)
+
+    #save overflow kwarg
+    overflow = kwargs.pop("overflow", "gutters")
+
+    color = _default_color(ax.scatter, hue, color, kwargs)
+
+    kwargs["overflow"] = overflow
+
+    edgecolor = p._complement_color(edgecolor, color, p._hue_map)
+
+    kwargs.setdefault("zorder", 3)
+    size = kwargs.get("s", size)
+
+    if linewidth is None:
+        linewidth = size / 10
+
+    kwargs.update(dict(
+        s=size ** 2,
+        edgecolor=edgecolor,
+        linewidth=linewidth,
+    ))
+
+    p.plot_swarms(
+        dodge=dodge,
+        color=color,
+        warn_thresh=warn_thresh,
+        plot_kws=kwargs,
+    )
+
+    p._add_axis_labels(ax)
+    p._adjust_cat_axis(ax, axis=p.orient)
+
+    return ax
+
+
+swarmplot.__doc__ = dedent("""\
+    Draw a categorical scatterplot with points adjusted to be non-overlapping.
+
+    This function is similar to :func:`stripplot`, but the points are adjusted
+    (only along the categorical axis) so that they don't overlap. This gives a
+    better representation of the distribution of values, but it does not scale
+    well to large numbers of observations. This style of plot is sometimes
+    called a "beeswarm".
+
+    A swarm plot can be drawn on its own, but it is also a good complement
+    to a box or violin plot in cases where you want to show all observations
+    along with some representation of the underlying distribution.
+
+    {categorical_narrative}
+
+    Parameters
+    ----------
+    {categorical_data}
+    {input_params}
+    {order_vars}
+    dodge : bool
+        When a `hue` variable is assigned, setting this to `True` will
+        separate the swaarms for different hue levels along the categorical
+        axis and narrow the amount of space allotedto each strip. Otherwise,
+        the points for each level will be plotted in the same swarm.
+    {orient}
+    {color}
+    {palette}
+    size : float
+        Radius of the markers, in points.
+    edgecolor : matplotlib color, "gray" is special-cased
+        Color of the lines around each point. If you pass `"gray"`, the
+        brightness is determined by the color palette used for the body
+        of the points.
+    {linewidth}
+    {log_scale}
+    {native_scale}
+    {formatter}
+    {legend}
+    {ax_in}
+    kwargs : key, value mappings
+        Other keyword arguments are passed through to
+        :meth:`matplotlib.axes.Axes.scatter`.
+
+    Returns
+    -------
+    {ax_out}
+
+    See Also
+    --------
+    {boxplot}
+    {violinplot}
+    {stripplot}
+    {catplot}
+
+    Examples
+    --------
+    .. include:: ../docstrings/swarmplot.rst
+
+    """).format(**_categorical_docs)
+
 import seaborn as sns
 sns.categorical.Beeswarm = Beeswarm
-sns.categorical._CategoricalPlotter = __CategoricalPlotter
+sns.categorical._CategoricalPlotter = _CategoricalPlotter
+sns.swarmplot = swarmplot

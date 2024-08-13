@@ -1,1 +1,1 @@
-from .betterbeeswarm import Beeswarm, __CategoricalPlotter
+from .betterbeeswarm import Beeswarm, _CategoricalPlotter, swarmplot
