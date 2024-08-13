@@ -43,7 +43,6 @@ tips = sns.load_dataset("tips")
 
 plt.figure(figsize=(4, 4)) # set figure size
 sns.swarmplot(data=tips, x="size", y="total_bill", size=5, overflow='shrink')
-
 plt.setp(plt.gca().collections, edgecolor="black", linewidth=.5)
 for collection in plt.gca().collections:
     collection.set_edgecolor((0, 0, 0, 1))  # RGBA tuple where A is the alpha channel

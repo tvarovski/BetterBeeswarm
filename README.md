@@ -86,3 +86,23 @@ sns.catplot(
 <p align="center">
 <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_cat.png">
 </p>
+
+### Example 4
+`BetterBeeswarm` can be used with `matplotlib` as well to customize the plot even further, for example by removing the fill color of the points acheaving a more minimalistic, wireframe look:
+
+```python
+import seaborn as sns
+import betterbeeswarm
+import matplotlib.pyplot as plt
+tips = sns.load_dataset("tips")
+
+plt.figure(figsize=(4, 4)) # set figure size
+sns.swarmplot(data=tips, x="size", y="total_bill", size=5, overflow='shrink')
+plt.setp(plt.gca().collections, edgecolor="black", linewidth=.5)
+for collection in plt.gca().collections:
+    collection.set_edgecolor((0, 0, 0, 1))  # RGBA tuple where A is the alpha channel
+    collection.set_facecolor((1, 1, 1, 0))  # RGBA tuple where A is the alpha channel
+```
+<p align="center">
+    <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_shrink_wireframe.png" width="500" height="500">
+</p>
