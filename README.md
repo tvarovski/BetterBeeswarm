@@ -14,10 +14,11 @@ pip install --upgrade betterbeeswarm
 To use BetterBeeswarm instead of the standard Seaborn Beeswarm, type the following each time you import the `seaborn` library:
 
 ```python
-from betterbeeswarm import Beeswarm
 import seaborn as sns
-sns.categorical.Beeswarm = Beeswarm
+import betterbeeswarm
 ```
+
+When using swarmplot, you can now add additional `overflow` argument which can be set to `overflow='gutters'` (default), `overflow='shrink'`, or `overflow='random'`.
 
 ## Examples
 ### Default
@@ -39,20 +40,35 @@ sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palett
 Default behaviour of native `Seaborn` can be modifies with `BetterBeeswarm` as follows:
 
 ```python
-from betterbeeswarm import Beeswarm
 import seaborn as sns
-sns.categorical.Beeswarm = Beeswarm
+import betterbeeswarm
 import matplotlib.pyplot as plt
 tips = sns.load_dataset("tips")
 
 plt.figure(figsize=(4, 4)) # set figure size
-sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis')
+sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis', overflow="shrink")
 ```
 <p align="center">
-    <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm.png" width="500" height="500">
+    <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_shrink.png" width="500" height="500">
 </p>
 
 ### Example 2
+Same as Example 1 but with `overflow='random'`:
+
+```python
+import seaborn as sns
+import betterbeeswarm
+import matplotlib.pyplot as plt
+tips = sns.load_dataset("tips")
+
+plt.figure(figsize=(4, 4)) # set figure size
+sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palette='viridis', overflow="random")
+```
+<p align="center">
+    <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_random.png" width="500" height="500">
+</p>
+
+### Example 3
 `BetterBeeswarm` also works for categorical plots and any time Seaborn's `Beeswarm` class is used:
 
 ```python
@@ -64,7 +80,7 @@ tips = sns.load_dataset("tips")
 sns.catplot(
     data=tips, kind="swarm",
     x="time", y="total_bill", hue="sex", col="day",
-    aspect=0.6, height=2.5, alpha=0.7, size=5
+    aspect=0.6, height=2.5, alpha=0.7, size=5, overflow="shrink"
 )
 ```
 <p align="center">

@@ -1,1 +1,1 @@
-from .betterbeeswarm import Beeswarm
+from .betterbeeswarm import Beeswarm, __CategoricalPlotter

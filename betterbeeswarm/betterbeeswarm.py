@@ -1,5 +1,9 @@
 from seaborn.categorical import Beeswarm as OriginalBeeswarm
+from seaborn.categorical import _CategoricalPlotter as OriginalCategoricalPlotter
 from seaborn.categorical import _get_transform_functions
+from seaborn.utils import _draw_figure
+from seaborn.utils import _scatter_legend_artist
+from matplotlib.markers import MarkerStyle
 import warnings
 import numpy as np
 
@@ -10,13 +14,22 @@ class Beeswarm(OriginalBeeswarm):
     the points and tries again. This is done until the points no longer
     overlap.
     """
-    def __init__(self, orient="x", width=0.8, warn_thresh=.05):
+    def __init__(self, orient="x", width=0.8, warn_thresh=.05, overflow="gutters"):
 
         self.orient = orient
         self.width = width
         self.warn_thresh = warn_thresh
-        self.gutters = False #BetterBeeswarm modification
-        self.shrink_factor = 0.9 #BetterBeeswarm modification
+
+        #BetterBeeswarm modifications
+        self.gutters = False
+        self.shrink_factor = 0.9
+        self.overflow = overflow
+        if overflow == "gutters":
+            self.keep_gutters = True
+        elif overflow in ["shrink", "random"]:
+            self.keep_gutters = False
+        else:
+            raise ValueError("overflow must be 'gutters', 'shrink', or 'random'")
 
     def __call__(self, points, center):
         """Swarm `points`, a PathCollection, around the `center` position."""
@@ -74,27 +87,42 @@ class Beeswarm(OriginalBeeswarm):
                 new_xy = new_xyr[:, :2]
             new_x_data, new_y_data = ax.transData.inverted().transform(new_xy).T
 
-            # Add gutters
+            # Add gutters or randomize points if they overflow
             t_fwd, t_inv = _get_transform_functions(ax, self.orient)
-            if self.orient == "y":
-                self.add_gutters(new_y_data, center, t_fwd, t_inv)
-            else:
-                self.add_gutters(new_x_data, center, t_fwd, t_inv)
 
-            # Reposition the points so they do not overlap
-            if self.orient == "y":
-                points.set_offsets(np.c_[orig_x_data, new_y_data])
-            else:
-                points.set_offsets(np.c_[new_x_data, orig_y_data])
+            if self.overflow == "random":
 
-            # Check if gutters were added
-            if self.gutters:
-                # Shrink the radii and try again
-                radii = radii * radius_shrink_factor
-                original_radius_fraction = original_radius_fraction * radius_shrink_factor
-                print(f"Shrinking radii to the {original_radius_fraction * 100}% of the original point size.")
-            else:
+                if self.orient == "y":
+                    self.add_randomly(new_y_data, center, t_fwd, t_inv)
+                else:
+                    self.add_randomly(new_x_data, center, t_fwd, t_inv)
                 checking_gutters = False
+
+            elif self.overflow in ["gutters", "shrink"]:
+
+                if self.orient == "y":
+                    self.add_gutters(new_y_data, center, t_fwd, t_inv)
+                else:
+                    self.add_gutters(new_x_data, center, t_fwd, t_inv)
+
+                if self.overflow == "gutters":
+                    checking_gutters = False
+
+                elif self.overflow == "shrink":
+                    # Check if there were gutters added
+                    if self.gutters == True:
+                        # if so, shrink the radii and try again
+                        radii = radii * radius_shrink_factor
+                        original_radius_fraction = original_radius_fraction * radius_shrink_factor
+                        print(f"Shrinking radii to the {original_radius_fraction * 100}% of the original point size.")
+                    else:
+                        checking_gutters = False
+
+        # Reposition the points so they do not overlap
+        if self.orient == "y":
+            points.set_offsets(np.c_[orig_x_data, new_y_data])
+        else:
+            points.set_offsets(np.c_[new_x_data, orig_y_data])
 
     def add_gutters(self, points, center, trans_fwd, trans_inv):
         """Stop points from extending beyond their territory."""
@@ -111,16 +139,120 @@ class Beeswarm(OriginalBeeswarm):
         gutter_prop = (off_high + off_low).sum() / len(points)
         if gutter_prop > self.warn_thresh:
             msg = (
-                "{:.1%} of the points cannot be placed; you may want "
-                "to decrease the size of the markers or use stripplot."
-                f"Using BetterBeeswarm to iteratively shrink points by {(1 - self.shrink_factor) * 100:.1f}%"
+                "{:.1%} of the points cannot be placed as swarm; you may want to decrease"
+                " the size of the markers, use stripplot, or set overflow='shrink'."
             ).format(gutter_prop)
             warnings.warn(msg, UserWarning)
         
         #BetterBeeswarm modified
+        if gutter_prop > 0:
             self.gutters = True
         else:
             self.gutters = False
         #end BetterBeeswarm modification
 
         return points
+    
+    def add_randomly(self, points, center, trans_fwd, trans_inv):
+        """Randomly place points within the width of the bounds."""
+        half_width = self.width / 2
+        low_bound = trans_inv(trans_fwd(center) - half_width)
+        high_bound = trans_inv(trans_fwd(center) + half_width)
+
+        off_low = points < low_bound
+        off_high = points > high_bound
+
+        if off_low.any() or off_high.any():
+            points[off_low] = np.random.uniform(low_bound, high_bound, size=off_low.sum())
+            points[off_high] = np.random.uniform(low_bound, high_bound, size=off_high.sum())
+
+        gutter_prop = (off_high + off_low).sum() / len(points)
+        if gutter_prop > self.warn_thresh:
+            msg = (
+                "{:.1%} of the points cannot be placed as swarm; you may want to decrease"
+                " the size of the markers, use stripplot, or set overflow='shrink'."
+            ).format(gutter_prop)
+            warnings.warn(msg, UserWarning)
+
+class __CategoricalPlotter(OriginalCategoricalPlotter):
+    def plot_swarms(
+        self,
+        dodge,
+        color,
+        warn_thresh,
+        plot_kws,
+    ):
+
+        width = .8 * self._native_width
+        offsets = self._nested_offsets(width, dodge)
+
+        iter_vars = [self.orient]
+        if dodge:
+            iter_vars.append("hue")
+
+        ax = self.ax
+        point_collections = {}
+        dodge_move = 0
+
+        if "marker" in plot_kws and not MarkerStyle(plot_kws["marker"]).is_filled():
+            plot_kws.pop("edgecolor", None)
+        
+        if "overflow" in plot_kws:
+            overflow = plot_kws.pop("overflow")
+        plot_kws.pop("overflow", None)
+
+        for sub_vars, sub_data in self.iter_data(iter_vars,
+                                                 from_comp_data=True,
+                                                 allow_empty=True):
+
+            ax = self._get_axes(sub_vars)
+
+            if offsets is not None:
+                dodge_move = offsets[sub_data["hue"].map(self._hue_map.levels.index)]
+
+            if not sub_data.empty:
+                sub_data[self.orient] = sub_data[self.orient] + dodge_move
+
+            self._invert_scale(ax, sub_data)
+
+            points = ax.scatter(sub_data["x"], sub_data["y"], color=color, **plot_kws)
+            if "hue" in self.variables:
+                points.set_facecolors(self._hue_map(sub_data["hue"]))
+
+            if not sub_data.empty:
+                point_collections[(ax, sub_data[self.orient].iloc[0])] = points
+
+        beeswarm = Beeswarm(width=width, orient=self.orient, warn_thresh=warn_thresh, overflow=overflow)
+        for (ax, center), points in point_collections.items():
+            if points.get_offsets().shape[0] > 1:
+
+                def draw(points, renderer, *, center=center):
+
+                    beeswarm(points, center)
+
+                    if self.orient == "y":
+                        scalex = False
+                        scaley = ax.get_autoscaley_on()
+                    else:
+                        scalex = ax.get_autoscalex_on()
+                        scaley = False
+
+                    # This prevents us from undoing the nice categorical axis limits
+                    # set in _adjust_cat_axis, because that method currently leave
+                    # the autoscale flag in its original setting. It may be better
+                    # to disable autoscaling there to avoid needing to do this.
+                    fixed_scale = self.var_types[self.orient] == "categorical"
+                    ax.update_datalim(points.get_datalim(ax.transData))
+                    if not fixed_scale and (scalex or scaley):
+                        ax.autoscale_view(scalex=scalex, scaley=scaley)
+
+                    super(points.__class__, points).draw(renderer)
+
+                points.draw = draw.__get__(points)
+
+        _draw_figure(ax.figure)
+        self._configure_legend(ax, _scatter_legend_artist, plot_kws)
+
+import seaborn as sns
+sns.categorical.Beeswarm = Beeswarm
+sns.categorical._CategoricalPlotter = __CategoricalPlotter
