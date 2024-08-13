@@ -37,7 +37,7 @@ sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palett
 </p>
 
 ### Example 1
-Default behaviour of native `Seaborn` can be modifies with `BetterBeeswarm` as follows:
+Default behaviour of native `Seaborn` can be modifies with `BetterBeeswarm` by passing `overflow='shrink'`:
 
 ```python
 import seaborn as sns
@@ -53,7 +53,7 @@ sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palett
 </p>
 
 ### Example 2
-Same as Example 1 but with `overflow='random'`:
+`BetterBeeswarm` can also be used to randomly place points that don't fit into the gutters by passing `overflow='random'`:
 
 ```python
 import seaborn as sns
