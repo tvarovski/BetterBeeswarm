@@ -17,12 +17,6 @@ pip install -e . seaborn matplotlib
 python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-## Reporting test results in PRs
-
-- Include the exact test command(s) you ran.
-- If a command did not run due to environment limitations (for example missing dependencies or blocked package index), explicitly say so.
-- Do not report tests as passed unless the command completed successfully.
-
 ## Release checklist
 
 1. Update the package version in `setup.py`.

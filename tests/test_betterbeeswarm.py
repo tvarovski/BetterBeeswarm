@@ -1,24 +1,15 @@
 import unittest
 
-DEPS_AVAILABLE = True
-DEPS_ERROR = ""
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 
-try:
-    import numpy as np
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    import betterbeeswarm
-    from betterbeeswarm.betterbeeswarm import Beeswarm
-except ModuleNotFoundError as exc:
-    DEPS_AVAILABLE = False
-    DEPS_ERROR = str(exc)
+import betterbeeswarm
+from betterbeeswarm.betterbeeswarm import Beeswarm
 
 
-@unittest.skipUnless(DEPS_AVAILABLE, f"Optional test dependencies unavailable: {DEPS_ERROR}")
 class BetterBeeswarmTests(unittest.TestCase):
     def tearDown(self):
         plt.close("all")
