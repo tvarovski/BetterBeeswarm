@@ -20,6 +20,14 @@ import betterbeeswarm
 
 When using swarmplot, you can now add additional `overflow` argument which can be set to `overflow='gutters'` (default), `overflow='shrink'`, or `overflow='random'`.
 
+| Mode | When to use it |
+| --- | --- |
+| `gutters` | Keep Seaborn-like behavior and preserve marker size. |
+| `shrink` | Avoid gutters for dense categories by shrinking points until they fit. |
+| `random` | Keep marker size and randomly re-place overflow points inside bounds. |
+
+If you use `overflow='random'`, you can pass `random_state=<int>` to make point placement reproducible.
+
 ## Examples
 ### Default
 When Seaborn's native Beeswarm class runs out of place it will put points that don't fit into gutters as in the example below:
@@ -67,6 +75,21 @@ sns.swarmplot(data=tips, x="size", y="total_bill", hue="size", alpha=0.7, palett
 <p align="center">
     <img src="https://raw.githubusercontent.com/tvarovski/BetterBeeswarm/main/examples/betterbeeswarm_random.png" width="500" height="500">
 </p>
+
+Reproducible random overflow placement:
+
+```python
+sns.swarmplot(
+    data=tips,
+    x="size",
+    y="total_bill",
+    hue="size",
+    alpha=0.7,
+    palette="viridis",
+    overflow="random",
+    random_state=42,
+)
+```
 
 ### Example 3
 `BetterBeeswarm` also works for categorical plots and any time Seaborn's `Beeswarm` class is used:
