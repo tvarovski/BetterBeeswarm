@@ -18,7 +18,14 @@ class Beeswarm(OriginalBeeswarm):
     the points and tries again. This is done until the points no longer
     overlap.
     """
-    def __init__(self, orient="x", width=0.8, warn_thresh=.05, overflow="gutters"):
+    def __init__(
+        self,
+        orient="x",
+        width=0.8,
+        warn_thresh=.05,
+        overflow="gutters",
+        random_state=None,
+    ):
 
         self.orient = orient
         self.width = width
@@ -28,6 +35,7 @@ class Beeswarm(OriginalBeeswarm):
         self.gutters = False
         self.shrink_factor = 0.9
         self.overflow = overflow
+        self._rng = np.random.default_rng(random_state)
         if overflow == "gutters":
             self.keep_gutters = True
         elif overflow in ["shrink", "random"]:
@@ -167,8 +175,8 @@ class Beeswarm(OriginalBeeswarm):
         off_high = points > high_bound
 
         if off_low.any() or off_high.any():
-            points[off_low] = np.random.uniform(low_bound, high_bound, size=off_low.sum())
-            points[off_high] = np.random.uniform(low_bound, high_bound, size=off_high.sum())
+            points[off_low] = self._rng.uniform(low_bound, high_bound, size=off_low.sum())
+            points[off_high] = self._rng.uniform(low_bound, high_bound, size=off_high.sum())
 
         gutter_prop = (off_high + off_low).sum() / len(points)
         if gutter_prop > self.warn_thresh:
@@ -206,6 +214,8 @@ class _CategoricalPlotter(OriginalCategoricalPlotter):
         else:
             overflow = "gutters"
 
+        random_state = plot_kws.pop("random_state", None)
+
         for sub_vars, sub_data in self.iter_data(iter_vars,
                                                  from_comp_data=True,
                                                  allow_empty=True):
@@ -227,7 +237,13 @@ class _CategoricalPlotter(OriginalCategoricalPlotter):
             if not sub_data.empty:
                 point_collections[(ax, sub_data[self.orient].iloc[0])] = points
 
-        beeswarm = Beeswarm(width=width, orient=self.orient, warn_thresh=warn_thresh, overflow=overflow)
+        beeswarm = Beeswarm(
+            width=width,
+            orient=self.orient,
+            warn_thresh=warn_thresh,
+            overflow=overflow,
+            random_state=random_state,
+        )
         for (ax, center), points in point_collections.items():
             if points.get_offsets().shape[0] > 1:
 
@@ -296,12 +312,14 @@ def swarmplot(
 
     p.map_hue(palette=palette, order=hue_order, norm=hue_norm)
 
-    #save overflow kwarg
+    # save custom BetterBeeswarm kwargs
     overflow = kwargs.pop("overflow", "gutters")
+    random_state = kwargs.pop("random_state", None)
 
     color = _default_color(ax.scatter, hue, color, kwargs)
 
     kwargs["overflow"] = overflow
+    kwargs["random_state"] = random_state
 
     edgecolor = p._complement_color(edgecolor, color, p._hue_map)
 
