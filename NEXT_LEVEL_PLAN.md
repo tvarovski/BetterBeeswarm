@@ -36,18 +36,8 @@ This plan is intentionally lightweight: keep the package small, but make it easi
 - Treat these as stable user-facing knobs: `overflow`, `warn_thresh`, and new `random_state`.
 - Avoid exposing internal seaborn patching internals in docs unless needed.
 
-## 7) Community growth, low-overhead
-- Add a short roadmap section with 3 priorities only.
-- Tag beginner-friendly issues ("good first issue") and one maintainer-priority label.
-- Ask users for datasets where swarm gutters are a problem; use these as benchmark examples.
-
 ## Suggested implementation order (2-3 short releases)
 1. **Release 1:** docs refresh + contribution guide + minimal CI tests.
 2. **Release 2:** `random_state` support + deterministic random overflow test.
 3. **Release 3:** small benchmark/example refresh and compatibility matrix update.
 
-## Success metrics (simple)
-- Fewer reproducibility complaints.
-- Faster issue turnaround.
-- More external contributions (even tiny docs fixes count).
-- Higher confidence from users due to passing CI + clear examples.
